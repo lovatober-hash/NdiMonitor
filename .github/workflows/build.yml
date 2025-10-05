@@ -1,0 +1,38 @@
+name: Build NdiMonitor APK
+
+on:
+  workflow_dispatch:   # permette di avviare il workflow manualmente
+  push:
+    branches: [ main ] # lo esegue anche quando aggiorni il ramo main
+
+env:
+  MODULE_NAME: app     # se la cartella del modulo si chiama "NdiMonitor", cambia qui
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🔧 Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: 🏗️ Build release APK
+        run: ./gradlew :${{ env.MODULE_NAME }}:assembleRelease --no-daemon -x test
+
+      - name: 📦 Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NdiMonitor-unsigned-apk
+          path: ${{ env.MODULE_NAME }}/build/outputs/apk/release/*.apk
